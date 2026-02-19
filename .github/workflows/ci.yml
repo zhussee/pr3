@@ -1,22 +1,21 @@
-name: CI_Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Получение исходного кода
-      - name: Checkout source code
+
+      # 1. Получение кода
+      - name: Checkout code
         uses: actions/checkout@v3
 
       # 2. Установка Python
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -24,15 +23,29 @@ jobs:
       # 3. Установка зависимостей
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Сборка проекта (проверка импорта)
+      # 4. Сборка проекта
       - name: Build project
         run: |
           python -m compileall app
 
-      # 5. Запуск модульных тестов
+      # 5. Запуск тестов (CI)
       - name: Run tests
         run: |
-          python -m pytest --maxfail=1 --disable-warnings -v
+          python -m pytest -v
+
+      # 6. Подготовка артефакта (Docker image)
+      - name: Build Docker image
+        run: |
+          docker build -t pr3-test-image .
+
+      # 7. Деплой в test среду
+      - name: Run container (Test environment)
+        run: |
+          docker run -d --name pr3-test-container pr3-test-image
+
+      # 8. Проверка запуска
+      - name: Check container status
+        run: |
+          docker ps
