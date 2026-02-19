@@ -35,4 +35,4 @@ jobs:
       # 5. Запуск модульных тестов
       - name: Run tests
         run: |
-          pytest --maxfail=1 --disable-warnings -v
+          python -m pytest --maxfail=1 --disable-warnings -v
